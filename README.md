@@ -20,6 +20,7 @@ accelerate launch train_controlnet.py \
  --learning_rate=1e-5 \
  --validation_image "./val_images/mew.png" "./val_images/donphan.png" \
  --validation_prompt "Make this pokemon evolve" "Make this pokemon evolve" \
- --train_batch_size=4
+ --train_batch_size=4 \
+ --report_to="wandb"
 
 ```
