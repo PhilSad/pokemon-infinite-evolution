@@ -37,6 +37,7 @@ from huggingface_hub import create_repo, upload_folder
 from packaging import version
 from PIL import Image
 from torchvision import transforms
+import torchvision.transforms.v2 as transforms_v2
 from tqdm.auto import tqdm
 from transformers import AutoTokenizer, PretrainedConfig
 
@@ -677,6 +678,15 @@ def make_train_dataset(args, tokenizer, accelerator):
         )
         return inputs.input_ids
 
+    image_transform_all = transforms.Compose(
+        [
+            transforms_v2.ColorJitter(
+                brightness=0.3, contrast=0.3, saturation=0.3, hue=0.1
+            ),
+            transforms_v2.RandomHorizontalFlip(),
+        ]
+    )
+
     image_transforms = transforms.Compose(
         [
             transforms.Resize(args.resolution, interpolation=transforms.InterpolationMode.BILINEAR),
@@ -695,11 +705,21 @@ def make_train_dataset(args, tokenizer, accelerator):
     )
 
     def preprocess_train(examples):
-        images = [image.convert("RGB") for image in examples[image_column]]
-        images = [image_transforms(image) for image in images]
 
+        images = [image.convert("RGB") for image in examples[image_column]]
         conditioning_images = [image.convert("RGB") for image in examples[conditioning_image_column]]
-        conditioning_images = [conditioning_image_transforms(image) for image in conditioning_images]
+
+        images_v2 = []
+        conditioning_images_v2 = []
+        for image, conditioning_image in zip(images, conditioning_images):
+            image_v2, conditioning_image_v2 = image_transform_all(image, conditioning_image)
+            images_v2.append(image_v2)
+            conditioning_images_v2.append(conditioning_image_v2)
+
+        images = [image_transforms(image) for image in images_v2]
+        conditioning_images = [
+            conditioning_image_transforms(image) for image in conditioning_images_v2
+        ]
 
         examples["pixel_values"] = images
         examples["conditioning_pixel_values"] = conditioning_images
