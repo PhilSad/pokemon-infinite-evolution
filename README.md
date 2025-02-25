@@ -5,6 +5,13 @@
 
 huggingface_cli login
 
+git clone https://github.com/huggingface/diffusers
+cd diffusers
+pip install -e .
+cd diffusers/examples/controlnet/
+pip install -r requirements.txt
+pip install wandb
+
 export MODEL_DIR="stable-diffusion-v1-5/stable-diffusion-v1-5"
 export OUTPUT_DIR="controlnet_pokemon"
 
